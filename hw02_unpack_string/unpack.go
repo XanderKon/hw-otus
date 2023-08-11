@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 var ErrInvalidString = errors.New("invalid string")
@@ -14,19 +15,19 @@ func Unpack(s string) (string, error) {
 	runeString := []rune(s)
 
 	for i, symbol := range runeString {
-		_, curErr := strconv.Atoi(string(symbol))
+		isDigit := unicode.IsDigit(symbol)
 
 		isEnd, nextVal, nextErr := getNextVal(runeString, i)
 
 		// skip string starts with digit & numbers
-		if curErr == nil && (i == 0 || (nextErr == nil && !isEnd)) {
+		if isDigit && (i == 0 || (nextErr == nil && !isEnd)) {
 			return "", ErrInvalidString
 		}
 
 		// if next is digit
 		if nextErr == nil && !isEnd {
 			res.WriteString(strings.Repeat(string(symbol), nextVal))
-		} else if curErr != nil {
+		} else if !isDigit {
 			res.WriteRune(symbol)
 		}
 	}
