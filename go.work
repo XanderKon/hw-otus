@@ -3,4 +3,5 @@ go 1.19
 use (
 	./hw01_hello_otus
 	./hw02_unpack_string
+	./hw03_frequency_analysis
 )
