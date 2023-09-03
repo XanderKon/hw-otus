@@ -48,4 +48,21 @@ func TestList(t *testing.T) {
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
 	})
+
+	t.Run("a new one", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(10)    // [10]
+		l.Remove(nil)      // No Error here
+		l.MoveToFront(nil) // No Error here
+		require.Equal(t, 1, l.Len())
+
+		// Check correct tail when move single element to start.
+		l = NewList()
+		l.PushBack(30)
+		require.Equal(t, l.Back().Value, 30)
+
+		l.MoveToFront(l.Front())
+		require.Equal(t, l.Back().Value, 30)
+	})
 }

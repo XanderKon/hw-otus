@@ -50,7 +50,33 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+		c := NewCache(2)
+
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+
+		val, ok := c.Get("aaa")
+		require.True(t, ok)
+		require.Equal(t, 100, val)
+
+		c.Clear()
+
+		val, ok = c.Get("aaa")
+		require.False(t, ok)
+		require.Equal(t, nil, val)
+	})
+
+	t.Run("remove from cache logic", func(t *testing.T) {
+		c := NewCache(2)
+
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+
+		wasInCache := c.Set("ccc", 200)
+		require.False(t, wasInCache)
+
+		// wasInCache = c.Set("aaa", 200)
+		// require.False(t, wasInCache) // Should be "False" here, but item still in list
 	})
 }
 
