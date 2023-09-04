@@ -78,7 +78,7 @@ func (l *list) Remove(i *ListItem) {
 }
 
 func (l *list) MoveToFront(i *ListItem) {
-	if i == nil {
+	if i == nil || l.first == i {
 		return
 	}
 
@@ -89,6 +89,7 @@ func (l *list) MoveToFront(i *ListItem) {
 
 	if oldFirst != nil {
 		l.first.Next = oldFirst
+		oldFirst.Prev = l.first
 	} else {
 		l.last = l.first
 	}
