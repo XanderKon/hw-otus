@@ -14,13 +14,19 @@ type lruCache struct {
 	items    map[Key]*ListItem
 }
 
+type сacheItem struct {
+	key   Key
+	value interface{}
+}
+
 func (l *lruCache) Set(key Key, value interface{}) bool {
 	if item, ok := l.items[key]; ok {
-		item.Value = value
+		item.Value = сacheItem{key: key, value: value}
 		l.queue.MoveToFront(item)
+
 		return true
 	}
-	item := l.addToQueue(value)
+	item := l.addToQueue(сacheItem{key: key, value: value})
 	l.items[key] = item
 
 	return false
@@ -31,9 +37,8 @@ func (l *lruCache) addToQueue(value interface{}) *ListItem {
 	item := l.queue.PushFront(value)
 
 	if l.queue.Len() > l.capacity {
+		delete(l.items, l.queue.Back().Value.(сacheItem).key)
 		l.queue.Remove(l.queue.Back())
-		// TODO: how to delete it without key?
-		// delete(l.items, l.queue.Back())
 	}
 
 	return item
@@ -42,7 +47,8 @@ func (l *lruCache) addToQueue(value interface{}) *ListItem {
 func (l *lruCache) Get(key Key) (interface{}, bool) {
 	if item, ok := l.items[key]; ok {
 		l.queue.MoveToFront(item)
-		return item.Value, true
+
+		return item.Value.(сacheItem).value, true
 	}
 	return nil, false
 }
