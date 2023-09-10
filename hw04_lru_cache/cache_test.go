@@ -50,7 +50,64 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+		c := NewCache(2)
+
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+
+		val, ok := c.Get("aaa")
+		require.True(t, ok)
+		require.Equal(t, 100, val)
+
+		c.Clear()
+
+		val, ok = c.Get("aaa")
+		require.False(t, ok)
+		require.Equal(t, nil, val)
+	})
+
+	t.Run("remove from cache logic", func(t *testing.T) {
+		c := NewCache(2)
+
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+
+		wasInCache := c.Set("ccc", 200)
+		require.False(t, wasInCache)
+
+		// First item "aaa" should be deleted.
+		val, ok := c.Get("aaa")
+		require.False(t, ok)
+		require.Equal(t, nil, val)
+	})
+
+	t.Run("remove from cache with resent using logic", func(t *testing.T) {
+		c := NewCache(3)
+
+		c.Set("aaa", 100)
+		c.Set("bbb", 200)
+		c.Set("ccc", 300)
+
+		val, ok := c.Get("bbb")
+		require.True(t, ok)
+		require.Equal(t, 200, val)
+
+		c.Get("aaa")
+		c.Get("aaa")
+		c.Get("ccc")
+		c.Get("ccc")
+		c.Set("ccc", 400)
+
+		val, ok = c.Get("ccc")
+		require.True(t, ok)
+		require.Equal(t, 400, val)
+
+		// Add new item and "bbb" should be deleted
+		c.Set("ddd", 500)
+
+		val, ok = c.Get("bbb")
+		require.False(t, ok)
+		require.Equal(t, nil, val)
 	})
 }
 
