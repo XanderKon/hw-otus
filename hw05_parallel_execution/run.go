@@ -34,7 +34,9 @@ func Run(tasks []Task, n, m int) error {
 	}
 
 	for _, t := range tasks {
-		tCh <- t
+		if counter.Load() < int32(m) || m == 0 {
+			tCh <- t
+		}
 	}
 
 	close(tCh)
