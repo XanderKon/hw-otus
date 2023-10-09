@@ -6,4 +6,5 @@ use (
 	./hw03_frequency_analysis
 	./hw04_lru_cache
 	./hw05_parallel_execution
+	./hw06_pipeline_execution
 )
