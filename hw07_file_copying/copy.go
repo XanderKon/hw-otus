@@ -18,7 +18,7 @@ var (
 )
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
-	fileRead, err := os.OpenFile(fromPath, os.O_RDONLY, 0644)
+	fileRead, err := os.OpenFile(fromPath, os.O_RDONLY, 0o644)
 	if err != nil {
 		return ErrUnsupportedFile
 	}
@@ -49,7 +49,6 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 
 func writer(src *os.File, toPath string, limit int64, offset int64) error {
 	file, err := os.Create(toPath)
-
 	if err != nil {
 		return ErrCannotCreateWriteFileError
 	}
