@@ -7,4 +7,5 @@ use (
 	./hw04_lru_cache
 	./hw05_parallel_execution
 	./hw06_pipeline_execution
+	./hw08_envdir_tool
 )
