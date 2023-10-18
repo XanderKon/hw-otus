@@ -43,6 +43,18 @@ func TestCopy(t *testing.T) {
 		require.EqualError(t, err, ErrOffsetExceedsFileSize.Error())
 	})
 
+	t.Run("case with read and write to the same file", func(t *testing.T) {
+		err := Copy(testTargetPath, testTargetPath, 0, 0)
+		require.NotNil(t, err)
+		require.EqualError(t, err, ErrFromAndToAreEqual.Error())
+	})
+
+	t.Run("case with read from /dev/random", func(t *testing.T) {
+		err := Copy("/dev/random", testTargetPath, 0, 0)
+		require.NotNil(t, err)
+		require.EqualError(t, err, ErrUnsupportedFile.Error())
+	})
+
 	// Удаляем временный файл.
 	defer os.Remove(testTargetPath)
 }

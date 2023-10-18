@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/cheggaaa/pb/v3"
 )
@@ -15,10 +16,17 @@ var (
 
 	ErrWriteFileError             = errors.New("there is some error with writing file")
 	ErrCannotCreateWriteFileError = errors.New("there is error with creating error file")
+
+	ErrFromAndToAreEqual = errors.New("source and target cannot be the same")
 )
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
-	fileRead, err := os.OpenFile(fromPath, os.O_RDONLY, 0644)
+	err := checkSafeTargetAndSource(fromPath, toPath)
+	if err != nil {
+		return err
+	}
+
+	fileRead, err := os.OpenFile(fromPath, os.O_RDONLY, 0o644)
 	if err != nil {
 		return ErrUnsupportedFile
 	}
@@ -49,7 +57,6 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 
 func writer(src *os.File, toPath string, limit int64, offset int64) error {
 	file, err := os.Create(toPath)
-
 	if err != nil {
 		return ErrCannotCreateWriteFileError
 	}
@@ -73,6 +80,22 @@ func writer(src *os.File, toPath string, limit int64, offset int64) error {
 	defer bar.Finish()
 	// Закрываем файл.
 	defer file.Close()
+
+	return nil
+}
+
+// Дополнительные проверки.
+func checkSafeTargetAndSource(fromPath, toPath string) error {
+	pathFrom, _ := filepath.Abs(fromPath)
+	pathTo, _ := filepath.Abs(toPath)
+
+	if pathFrom == pathTo {
+		return ErrFromAndToAreEqual
+	}
+
+	if fromPath == "/dev/random" || fromPath == "/dev/urandom" {
+		return ErrUnsupportedFile
+	}
 
 	return nil
 }
