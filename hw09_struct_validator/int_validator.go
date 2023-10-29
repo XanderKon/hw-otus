@@ -57,12 +57,11 @@ func (v IntValidator) Validate(rule string, ruleValue interface{}, checkValue in
 				return fmt.Errorf("incorrect tag value: %w", errSystemError)
 			}
 
-			if num != checkValue.(int) {
-				return errValidationNotInPlentyNumbers
+			if num == checkValue.(int) {
+				return nil
 			}
-
-			return nil
 		}
+		return errValidationNotInPlentyNumbers
 	}
 
 	return nil

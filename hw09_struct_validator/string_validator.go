@@ -56,11 +56,11 @@ func (v StringValidator) Validate(rule string, ruleValue interface{}, checkValue
 			if sliceVal == "" {
 				return fmt.Errorf("incorrect tag value: %w", errSystemError)
 			}
-			if sliceVal != checkValue.(string) {
-				return errValidationNotInPlentyStrings
+			if sliceVal == checkValue.(string) {
+				return nil
 			}
-			return nil
 		}
+		return errValidationNotInPlentyStrings
 	}
 
 	return nil
