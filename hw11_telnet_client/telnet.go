@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"io"
 	"net"
 	"time"
@@ -35,25 +33,18 @@ func (c *client) Connect() error {
 }
 
 func (c *client) Send() error {
-	scanner := bufio.NewScanner(c.in)
-	for scanner.Scan() {
-		_, err := c.conn.Write([]byte(scanner.Text() + "\n"))
-		if err != nil {
-			return err
-		}
+	_, err := io.Copy(c.conn, c.in)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (c *client) Receive() error {
-	scanner := bufio.NewScanner(c.conn)
-	for scanner.Scan() {
-		fmt.Println(scanner.Text())
-		_, err := c.out.Write([]byte(scanner.Text() + "\n"))
-		if err != nil {
-			return err
-		}
+	_, err := io.Copy(c.out, c.conn)
+	if err != nil {
+		return err
 	}
 
 	return nil
