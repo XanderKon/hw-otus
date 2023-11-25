@@ -1,5 +1,6 @@
 [logger]
 level = "INFO"
+path = "./logs/calendar.log"
 
 # TODO
 # ...
