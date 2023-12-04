@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,7 +12,9 @@ import (
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/app"
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/logger"
 	internalhttp "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/server/http"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
 var configFile string
@@ -28,18 +31,39 @@ func main() {
 		return
 	}
 
+	// init context
+	ctx, cancel := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	defer cancel()
+
 	config := NewConfig()
 
 	logg := logger.New(config.Logger.Level, os.Stdout)
 
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	var eventStorage storage.EventStorage
+	if config.Storage.Driver == "postgres" {
+		connectionString := fmt.Sprintf(
+			"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			config.DB.DBHost, config.DB.DBPort, config.DB.DBUsername, config.DB.DBPassword, config.DB.DBName,
+		)
+
+		eventStorage = sqlstorage.New(connectionString)
+		err := eventStorage.Connect(ctx)
+		if err != nil {
+			logg.Error("cannot connect to DB server: " + err.Error())
+			cancel()
+			os.Exit(1) //nolint:gocritic
+		}
+		defer eventStorage.Close()
+	} else {
+		eventStorage = memorystorage.New()
+	}
+
+	logg.Info(fmt.Sprintf("successfully init %s storage", config.Storage.Driver))
+
+	calendar := app.New(logg, eventStorage)
 
 	server := internalhttp.NewServer(logg, calendar)
-
-	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer cancel()
 
 	go func() {
 		<-ctx.Done()

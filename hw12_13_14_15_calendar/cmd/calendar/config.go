@@ -11,14 +11,26 @@ import (
 // Организация конфига в main принуждает нас сужать API компонентов, использовать
 // при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
 type Config struct {
-	Logger LoggerConf `mapstructure:"logger"`
-	// TODO
+	Logger  LoggerConf  `mapstructure:"logger"`
+	Storage StorageConf `mapstructure:"storage"`
+	DB      DBConf      `mapstructure:"db"`
 }
 
 type LoggerConf struct {
 	Level string `mapstructure:"level"`
 	Path  string `mapstructure:"path"`
-	// TODO
+}
+
+type StorageConf struct {
+	Driver string `mapstructure:"driver"`
+}
+
+type DBConf struct {
+	DBHost     string `mapstructure:"host"`
+	DBPort     int    `mapstructure:"port"`
+	DBName     string `mapstructure:"name"`
+	DBUsername string `mapstructure:"username"`
+	DBPassword string `mapstructure:"password"`
 }
 
 func NewConfig() *Config {
