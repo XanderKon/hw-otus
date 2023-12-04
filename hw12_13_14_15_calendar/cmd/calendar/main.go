@@ -8,10 +8,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/app"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/server/http"
+	memorystorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/memory"
 )
 
 var configFile string
@@ -29,7 +29,8 @@ func main() {
 	}
 
 	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
+
+	logg := logger.New(config.Logger.Level, os.Stdout)
 
 	storage := memorystorage.New()
 	calendar := app.New(logg, storage)
@@ -52,6 +53,9 @@ func main() {
 	}()
 
 	logg.Info("calendar is running...")
+	logg.Error("This is error...")
+	logg.Warning("This is warning...")
+	logg.Debug("This is debug...")
 
 	if err := server.Start(ctx); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
