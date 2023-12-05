@@ -3,6 +3,8 @@ package sqlstorage
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"time"
 
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
 	"github.com/google/uuid"
@@ -118,8 +120,11 @@ func (s *Storage) GetEvent(ctx context.Context, eventID uuid.UUID) (*storage.Eve
 
 	row := s.DB.QueryRowContext(ctx, query, eventID)
 
-	var event storage.Event
+	if errors.Is(row.Err(), sql.ErrNoRows) {
+		return nil, storage.ErrEventNotFound
+	}
 
+	var event storage.Event
 	err := row.Scan(
 		&event.ID,
 		&event.Title,
@@ -169,4 +174,31 @@ func (s *Storage) GetEvents(ctx context.Context) ([]*storage.Event, error) {
 	}
 
 	return events, nil
+}
+
+func (s *Storage) GetEventByDate(ctx context.Context, eventDatetime time.Time) (*storage.Event, error) {
+	const query = `
+		SELECT id, title, date_time, duration, description, user_id, notification_time
+		FROM event
+		WHERE date_time = $1
+	`
+
+	row := s.DB.QueryRowContext(ctx, query, eventDatetime.String())
+
+	var event storage.Event
+
+	err := row.Scan(
+		&event.ID,
+		&event.Title,
+		&event.DateTime,
+		&event.Duration,
+		&event.Description,
+		&event.UserID,
+		&event.TimeNotification,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &event, nil
 }

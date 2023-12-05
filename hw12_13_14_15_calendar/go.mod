@@ -3,6 +3,7 @@ module github.com/XanderKon/hw-otus/hw12_13_14_15_calendar
 go 1.19
 
 require (
+	github.com/google/uuid v1.4.0
 	github.com/lib/pq v1.2.0
 	github.com/pressly/goose v2.7.0+incompatible
 	github.com/spf13/viper v1.17.0
@@ -13,7 +14,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/google/uuid v1.4.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

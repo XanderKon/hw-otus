@@ -2,7 +2,7 @@ package memorystorage
 
 import (
 	"context"
-	"fmt"
+	"math/rand"
 	"sync"
 	"testing"
 	"time"
@@ -12,12 +12,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func randomTimeGenerator() time.Time {
+	return time.Unix(rand.Int63n(time.Now().Unix()-94608000)+94608000, 0)
+}
+
 func TestCreateAndGetAndUpdateEvent(t *testing.T) {
 	st := New()
 
 	event := &storage.Event{
 		ID:    uuid.New(),
-		Title: "Event description",
+		Title: "Event title",
 	}
 
 	err := st.CreateEvent(context.Background(), event)
@@ -27,9 +31,11 @@ func TestCreateAndGetAndUpdateEvent(t *testing.T) {
 	err = st.CreateEvent(context.Background(), event)
 	assert.Equal(t, storage.ErrEventAlreadyExists, err)
 
-	// update
-	event.Title = "Event after update"
-	err = st.UpdateEvent(context.Background(), event.ID, event)
+	eventForUpdate := &storage.Event{
+		Title:    "Event after update",
+		DateTime: randomTimeGenerator(),
+	}
+	err = st.UpdateEvent(context.Background(), event.ID, eventForUpdate)
 	assert.NoError(t, err)
 
 	// check after update
@@ -44,6 +50,25 @@ func TestCreateAndGetAndUpdateEvent(t *testing.T) {
 	// get event that doesn't exist
 	_, err = st.GetEvent(context.Background(), uuid.New())
 	assert.Equal(t, storage.ErrEventNotFound, err)
+}
+
+func TestUpdateWithBusyTimeEvent(t *testing.T) {
+	time := randomTimeGenerator()
+	id := uuid.New()
+
+	st := New()
+
+	event := &storage.Event{
+		ID:       id,
+		Title:    "Event title",
+		DateTime: time,
+	}
+
+	err := st.CreateEvent(context.Background(), event)
+	assert.NoError(t, err)
+
+	err = st.UpdateEvent(context.Background(), id, &storage.Event{Title: "1", DateTime: time})
+	assert.Equal(t, storage.ErrEventDateTimeIsBusy, err)
 }
 
 func TestDeleteEvent(t *testing.T) {
@@ -85,8 +110,9 @@ func TestConcurrent(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			event := &storage.Event{
-				ID:    UUID,
-				Title: uuid.New().String(),
+				ID:       UUID,
+				Title:    uuid.New().String(),
+				DateTime: randomTimeGenerator(),
 			}
 			err := st.UpdateEvent(context.Background(), UUID, event)
 			assert.NoError(t, err)
@@ -96,7 +122,6 @@ func TestConcurrent(t *testing.T) {
 	wg.Wait()
 
 	updatedEvent, err := st.GetEvent(context.Background(), UUID)
-	fmt.Println(updatedEvent)
 	assert.NoError(t, err)
 	assert.NotNil(t, updatedEvent)
 	assert.NotContains(t, updatedEvent.Title, "Event Title")

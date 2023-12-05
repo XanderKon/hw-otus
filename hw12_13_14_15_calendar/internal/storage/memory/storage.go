@@ -3,6 +3,7 @@ package memorystorage
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
 	"github.com/google/uuid"
@@ -40,15 +41,21 @@ func (s *Storage) CreateEvent(_ context.Context, event *storage.Event) error {
 	return nil
 }
 
-func (s *Storage) UpdateEvent(_ context.Context, eventID uuid.UUID, event *storage.Event) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
+func (s *Storage) UpdateEvent(ctx context.Context, eventID uuid.UUID, event *storage.Event) error {
+	// same id
 	if _, found := s.events[eventID]; !found {
 		return storage.ErrEventNotFound
 	}
 
-	s.events[event.ID] = event
+	// busy time
+	if _, err := s.GetEventByDate(ctx, event.DateTime); err == nil {
+		return storage.ErrEventDateTimeIsBusy
+	}
+
+	s.mu.Lock()
+	s.events[eventID] = event
+	s.mu.Unlock()
+
 	return nil
 }
 
@@ -74,6 +81,19 @@ func (s *Storage) GetEvent(_ context.Context, eventID uuid.UUID) (*storage.Event
 	}
 
 	return event, nil
+}
+
+func (s *Storage) GetEventByDate(_ context.Context, eventDatetime time.Time) (*storage.Event, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for _, event := range s.events {
+		if event.DateTime == eventDatetime {
+			return event, nil
+		}
+	}
+
+	return nil, storage.ErrEventNotFound
 }
 
 func (s *Storage) GetEvents(_ context.Context) ([]*storage.Event, error) {

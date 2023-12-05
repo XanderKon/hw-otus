@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -14,7 +15,8 @@ type EventStorage interface {
 	DeleteEvent(ctx context.Context, eventID uuid.UUID) error
 	GetEvents(ctx context.Context) ([]*Event, error)
 	GetEvent(ctx context.Context, eventID uuid.UUID) (*Event, error)
-	// GetEventsByDay(ctx context.Context, startOfDay time.Time) ([]*Event, error)
-	// GetEventsByWeek(ctx context.Context, startOfWeek time.Time) ([]*Event, error)
-	// GetEventsByMonth(ctx context.Context, startOfMonth time.Time) ([]*Event, error)
+	GetEventByDate(ctx context.Context, eventDatetime time.Time) (*Event, error)
+	// GetEventsForDay(ctx context.Context, startOfDay time.Time) ([]*Event, error)
+	// GetEventsForWeek(ctx context.Context, startOfWeek time.Time) ([]*Event, error)
+	// GetEventsForMonth(ctx context.Context, startOfMonth time.Time) ([]*Event, error)
 }

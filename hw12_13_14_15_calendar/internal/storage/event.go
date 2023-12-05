@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	ErrEventAlreadyExists = errors.New("event already exists")
-	ErrEventNotFound      = errors.New("event not found")
+	ErrEventAlreadyExists  = errors.New("event already exists")
+	ErrEventNotFound       = errors.New("event not found")
+	ErrEventDateTimeIsBusy = errors.New("this time is busy")
 )
 
 type Event struct {
