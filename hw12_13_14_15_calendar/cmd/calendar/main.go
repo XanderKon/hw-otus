@@ -63,7 +63,7 @@ func main() {
 
 	calendar := app.New(logg, eventStorage)
 
-	server := internalhttp.NewServer(logg, calendar)
+	server := internalhttp.NewServer(config.HTTPServer.Host, config.HTTPServer.Port, logg, calendar)
 
 	go func() {
 		<-ctx.Done()
@@ -84,6 +84,6 @@ func main() {
 	if err := server.Start(ctx); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
-		os.Exit(1) //nolint:gocritic
+		os.Exit(1)
 	}
 }

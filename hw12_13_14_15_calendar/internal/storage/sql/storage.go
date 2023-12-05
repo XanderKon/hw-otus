@@ -8,7 +8,7 @@ import (
 
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
 	"github.com/google/uuid"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // PG
 	"github.com/pressly/goose"
 )
 
@@ -25,7 +25,6 @@ func New(connectionString string) *Storage {
 
 func (s *Storage) Connect(ctx context.Context) error {
 	db, err := sql.Open("postgres", s.connectionString)
-
 	if err != nil {
 		return err
 	}
@@ -147,7 +146,6 @@ func (s *Storage) GetEvents(ctx context.Context) ([]*storage.Event, error) {
 		FROM event
 	`
 	rows, err := s.DB.QueryContext(ctx, query)
-
 	if err != nil {
 		return nil, err
 	}

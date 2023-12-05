@@ -11,4 +11,7 @@ port = 5432
 name = "otus-db"
 username = "postgres"
 password = "postgres"
- 
+
+[http]
+host = "localhost"
+port = 8080
