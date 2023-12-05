@@ -43,6 +43,8 @@ func (s *Storage) CreateEvent(_ context.Context, event *storage.Event) error {
 
 func (s *Storage) UpdateEvent(ctx context.Context, eventID uuid.UUID, event *storage.Event) error {
 	// same id
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if _, found := s.events[eventID]; !found {
 		return storage.ErrEventNotFound
 	}
@@ -52,9 +54,7 @@ func (s *Storage) UpdateEvent(ctx context.Context, eventID uuid.UUID, event *sto
 		return storage.ErrEventDateTimeIsBusy
 	}
 
-	s.mu.Lock()
 	s.events[eventID] = event
-	s.mu.Unlock()
 
 	return nil
 }
@@ -84,8 +84,11 @@ func (s *Storage) GetEvent(_ context.Context, eventID uuid.UUID) (*storage.Event
 }
 
 func (s *Storage) GetEventByDate(_ context.Context, eventDatetime time.Time) (*storage.Event, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	// because can be already locked by parent function.
+	if s.mu.TryLock() {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
 
 	for _, event := range s.events {
 		if event.DateTime == eventDatetime {
