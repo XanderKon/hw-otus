@@ -247,7 +247,7 @@ func (s *Storage) GetEventsForDay(ctx context.Context, startOfDay time.Time) ([]
 }
 
 func (s *Storage) GetEventsForWeek(ctx context.Context, startOfWeek time.Time) ([]*storage.Event, error) {
-	return s.getEventsForRange(ctx, startOfWeek, startOfWeek.Add(24*time.Hour))
+	return s.getEventsForRange(ctx, startOfWeek, startOfWeek.AddDate(0, 0, 7))
 }
 
 func (s *Storage) GetEventsForMonth(ctx context.Context, startOfMonth time.Time) ([]*storage.Event, error) {

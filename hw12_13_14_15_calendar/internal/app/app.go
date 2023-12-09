@@ -50,3 +50,15 @@ func (a *App) GetEvent(ctx context.Context, eventID uuid.UUID) (*storage.Event, 
 func (a *App) GetEventByDate(ctx context.Context, eventDatetime time.Time) (*storage.Event, error) {
 	return a.storage.GetEventByDate(ctx, eventDatetime)
 }
+
+func (a *App) GetEventsForDay(ctx context.Context, startOfDay time.Time) ([]*storage.Event, error) {
+	return a.storage.GetEventsForDay(ctx, startOfDay)
+}
+
+func (a *App) GetEventsForWeek(ctx context.Context, startOfWeek time.Time) ([]*storage.Event, error) {
+	return a.storage.GetEventsForWeek(ctx, startOfWeek)
+}
+
+func (a *App) GetEventsForMonth(ctx context.Context, startOfMonth time.Time) ([]*storage.Event, error) {
+	return a.storage.GetEventsForMonth(ctx, startOfMonth)
+}
