@@ -102,3 +102,40 @@ func (s *Storage) GetEventByDate(_ context.Context, eventDatetime time.Time) (*s
 func (s *Storage) GetEvents(_ context.Context) ([]*storage.Event, error) {
 	return maps.Values(s.events), nil
 }
+
+// general mehtod for getting events by date range.
+func (s *Storage) getEventsForRange(startRange time.Time, endRange time.Time) ([]*storage.Event, error) {
+	var events []*storage.Event
+	for _, event := range s.events {
+		if event.DateTime.After(startRange.Add(-time.Second)) && event.DateTime.Before(endRange) {
+			events = append(events, event)
+		}
+	}
+
+	return events, nil
+}
+
+func (s *Storage) GetEventsForDay(_ context.Context, startOfDay time.Time) ([]*storage.Event, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.getEventsForRange(startOfDay, startOfDay.Add(24*time.Hour))
+}
+
+func (s *Storage) GetEventsForWeek(_ context.Context, startOfWeek time.Time) ([]*storage.Event, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	endRange := startOfWeek.Add(24 * time.Hour)
+
+	return s.getEventsForRange(startOfWeek, endRange.AddDate(0, 0, 7))
+}
+
+func (s *Storage) GetEventsForMonth(_ context.Context, startOfMonth time.Time) ([]*storage.Event, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	endRange := startOfMonth.Add(24 * time.Hour)
+
+	return s.getEventsForRange(startOfMonth, endRange.AddDate(0, 1, 0))
+}

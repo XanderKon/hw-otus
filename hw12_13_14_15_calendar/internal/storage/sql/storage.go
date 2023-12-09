@@ -200,3 +200,56 @@ func (s *Storage) GetEventByDate(ctx context.Context, eventDatetime time.Time) (
 
 	return &event, nil
 }
+
+// general mehtod for getting events by date range.
+func (s *Storage) getEventsForRange(
+	ctx context.Context,
+	startRange time.Time,
+	endRange time.Time,
+) ([]*storage.Event, error) {
+	var events []*storage.Event
+
+	const query = `
+		SELECT id, title, date_time, duration, description, user_id, notification_time
+		FROM event
+		WHERE date_time >= $1 AND date_time < $2
+	`
+
+	rows, err := s.DB.QueryContext(ctx, query, startRange, endRange)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate on the results of the query and create event objects
+	for rows.Next() {
+		event := &storage.Event{}
+		err := rows.Scan(
+			&event.ID,
+			&event.Title,
+			&event.DateTime,
+			&event.Duration,
+			&event.Description,
+			&event.UserID,
+			&event.TimeNotification,
+		)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+func (s *Storage) GetEventsForDay(ctx context.Context, startOfDay time.Time) ([]*storage.Event, error) {
+	return s.getEventsForRange(ctx, startOfDay, startOfDay.Add(24*time.Hour))
+}
+
+func (s *Storage) GetEventsForWeek(ctx context.Context, startOfWeek time.Time) ([]*storage.Event, error) {
+	return s.getEventsForRange(ctx, startOfWeek, startOfWeek.Add(24*time.Hour))
+}
+
+func (s *Storage) GetEventsForMonth(ctx context.Context, startOfMonth time.Time) ([]*storage.Event, error) {
+	return s.getEventsForRange(ctx, startOfMonth, startOfMonth.AddDate(0, 1, 0))
+}
