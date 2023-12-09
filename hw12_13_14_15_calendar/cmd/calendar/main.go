@@ -3,15 +3,18 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/app"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/server/http"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
+	memorystorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
 var configFile string
@@ -28,17 +31,39 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
-
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
-
-	server := internalhttp.NewServer(logg, calendar)
-
+	// init context
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
+
+	config := NewConfig()
+
+	logg := logger.New(config.Logger.Level, os.Stdout)
+
+	var eventStorage storage.EventStorage
+	if config.Storage.Driver == "postgres" {
+		connectionString := fmt.Sprintf(
+			"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			config.DB.DBHost, config.DB.DBPort, config.DB.DBUsername, config.DB.DBPassword, config.DB.DBName,
+		)
+
+		eventStorage = sqlstorage.New(connectionString)
+		err := eventStorage.Connect(ctx)
+		if err != nil {
+			logg.Error("cannot connect to DB server: " + err.Error())
+			cancel()
+			os.Exit(1) //nolint:gocritic
+		}
+		defer eventStorage.Close()
+	} else {
+		eventStorage = memorystorage.New()
+	}
+
+	logg.Info(fmt.Sprintf("successfully init %s storage", config.Storage.Driver))
+
+	calendar := app.New(logg, eventStorage)
+
+	server := internalhttp.NewServer(config.HTTPServer.Host, config.HTTPServer.Port, logg, calendar)
 
 	go func() {
 		<-ctx.Done()
@@ -52,10 +77,13 @@ func main() {
 	}()
 
 	logg.Info("calendar is running...")
+	logg.Error("This is error...")
+	logg.Warning("This is warning...")
+	logg.Debug("This is debug...")
 
 	if err := server.Start(ctx); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
-		os.Exit(1) //nolint:gocritic
+		os.Exit(1)
 	}
 }
