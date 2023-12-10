@@ -54,7 +54,7 @@ func (s *Storage) Close() error {
 func (s *Storage) CreateEvent(ctx context.Context, event *storage.Event) error {
 	const query = `
 		INSERT INTO event (title, date_time, duration, description, user_id, notification_time)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 
 	_, err := s.DB.ExecContext(
@@ -151,10 +151,9 @@ func (s *Storage) GetEvents(ctx context.Context) ([]*storage.Event, error) {
 	}
 
 	var events []*storage.Event
-	var event storage.Event
 
 	for rows.Next() {
-		e := &event
+		e := &storage.Event{}
 		err := rows.Scan(
 			&e.ID,
 			&e.Title,

@@ -2,15 +2,19 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/app"
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/logger"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/server/grpc"
 	internalhttp "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/server/http"
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/memory"
@@ -63,27 +67,44 @@ func main() {
 
 	calendar := app.New(logg, eventStorage)
 
-	server := internalhttp.NewServer(config.HTTPServer.Host, config.HTTPServer.Port, logg, calendar)
+	httpServer := internalhttp.NewServer(config.HTTPServer.Host, config.HTTPServer.Port, logg, calendar)
+	grpcServer := grpc.NewServer(config.GRPCServer.Host, config.GRPCServer.Port, logg, calendar)
 
 	go func() {
 		<-ctx.Done()
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		_, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
 
-		if err := server.Stop(ctx); err != nil {
+		if err := httpServer.Stop(ctx); err != nil {
 			logg.Error("failed to stop http server: " + err.Error())
 		}
+
+		logg.Info("http-server successfully terminated!")
+
+		grpcServer.Stop()
+		logg.Info("grpc-server successfully terminated!")
+
+		os.Exit(1)
 	}()
 
 	logg.Info("calendar is running...")
-	logg.Error("This is error...")
-	logg.Warning("This is warning...")
-	logg.Debug("This is debug...")
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1)
-	}
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+
+	go func() {
+		if err := httpServer.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logg.Error("failed to start http server: " + err.Error())
+		}
+	}()
+
+	go func() {
+		if err := grpcServer.Start(ctx); err != nil {
+			logg.Error("failed to start grpc server: " + err.Error())
+		}
+	}()
+
+	wg.Wait()
 }

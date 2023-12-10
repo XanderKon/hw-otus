@@ -15,3 +15,7 @@ password = "postgres"
 [http]
 host = "localhost"
 port = 8080
+
+[grpc]
+host = "localhost"
+port = 8081

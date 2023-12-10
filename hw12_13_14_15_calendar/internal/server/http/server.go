@@ -88,6 +88,8 @@ func (s *Server) Start(ctx context.Context) error {
 		ReadHeaderTimeout: 20 * time.Second,
 	}
 
+	s.logger.Info("http-server is up...")
+
 	return s.server.ListenAndServe()
 }
 

@@ -22,6 +22,7 @@ linters-settings:
             - github.com/spf13/viper
             - github.com/XanderKon/hw-otus
             - github.com/gorilla/mux
+            - github.com/golang/protobuf/ptypes/timestamp
             - github.com/stretchr/testify/assert
         tests:
           listMode: Lax
