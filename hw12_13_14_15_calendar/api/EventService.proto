@@ -22,9 +22,9 @@ service CalendarService {
     rpc DeleteEvent(EventIdRequest) returns (google.protobuf.Empty);
     rpc GetEvents(google.protobuf.Empty) returns (EventsResponse);
     rpc GetEvent(EventIdRequest) returns (EventResponse);
-    // rpc GetEventsForDay(RangeRequest) returns (EventsResponse);
-    // rpc GetEventsForWeek(RangeRequest) returns (EventsResponse);
-    // rpc GetEventsForMonth(RangeRequest) returns (EventsResponse);
+    rpc GetEventsForDay(RangeRequest) returns (EventsResponse);
+    rpc GetEventsForWeek(RangeRequest) returns (EventsResponse);
+    rpc GetEventsForMonth(RangeRequest) returns (EventsResponse);
 }
 
 message EventRequest {

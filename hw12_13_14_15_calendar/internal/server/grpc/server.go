@@ -185,6 +185,36 @@ func (s *Server) GetEvent(ctx context.Context, req *pb.EventIdRequest) (*pb.Even
 	return s.eventResponse(event), nil
 }
 
+func (s *Server) GetEventsForDay(ctx context.Context, req *pb.RangeRequest) (*pb.EventsResponse, error) {
+	fmt.Println(req.DateTime)
+	fmt.Println(req.DateTime.AsTime())
+
+	events, err := s.app.GetEventsForDay(ctx, req.DateTime.AsTime())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.EventsResponse{Events: s.eventsReponse(events)}, nil
+}
+
+func (s *Server) GetEventsForWeek(ctx context.Context, req *pb.RangeRequest) (*pb.EventsResponse, error) {
+	events, err := s.app.GetEventsForWeek(ctx, req.DateTime.AsTime())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.EventsResponse{Events: s.eventsReponse(events)}, nil
+}
+
+func (s *Server) GetEventsForMonth(ctx context.Context, req *pb.RangeRequest) (*pb.EventsResponse, error) {
+	events, err := s.app.GetEventsForMonth(ctx, req.DateTime.AsTime())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.EventsResponse{Events: s.eventsReponse(events)}, nil
+}
+
 // helper for getting event UUID from request.
 func (s *Server) parseRequestAndGetUUID(uuidString string) (uuid.UUID, error) {
 	eventUUID, err := uuid.Parse(uuidString)
@@ -208,4 +238,20 @@ func (s *Server) eventResponse(event *storage.Event) *pb.EventResponse {
 			DateTime:         timestamppb.New(event.DateTime),
 		},
 	}
+}
+
+func (s *Server) eventsReponse(events []*storage.Event) []*pb.Event {
+	res := make([]*pb.Event, len(events))
+	for i, event := range events {
+		res[i] = &pb.Event{
+			Id:               event.ID.String(),
+			Title:            event.Title,
+			Description:      event.Description,
+			UserId:           event.UserID,
+			Duration:         event.Duration,
+			TimeNotification: timestamppb.New(event.TimeNotification),
+			DateTime:         timestamppb.New(event.DateTime),
+		}
+	}
+	return res
 }
