@@ -1,0 +1,217 @@
+{
+	"info": {
+		"_postman_id": "75a45ad7-ca4e-4612-91ba-db41dd7b3d53",
+		"name": "HTTP",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "2710404"
+	},
+	"item": [
+		{
+			"name": "CreateEvent",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{    \n    \"title\": \"occaecat fugiat ut velit dolore\",\n    \"date_time\": \"1970-01-01T03:11:23.855081+03:00\",\n    \"duration\": 2,\n    \"description\": \"consectetur laboris\",\n    \"user_id\": 1,\n    \"time_notification\": \"1992-11-25T10:29:13.722906+03:00\"\n},"
+				},
+				"url": {
+					"raw": "localhost:8080/event",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"event"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateEvent",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{    \n    \"title\": \"Update title\",\n    \"date_time\": \"1970-01-01T03:11:23.855081+03:00\",\n    \"duration\": 2,\n    \"description\": \"consectetur laboris\",\n    \"user_id\": 1,\n    \"time_notification\": \"1992-11-25T10:29:13.722906+03:00\"\n},"
+				},
+				"url": {
+					"raw": "localhost:8080/event/e4d3f1a3-9faa-4bb2-931a-b2d3caed9678",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"event",
+						"e4d3f1a3-9faa-4bb2-931a-b2d3caed9678"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteEvent",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{    \n    \"title\": \"Update title\",\n    \"date_time\": \"1970-01-01T03:11:23.855081+03:00\",\n    \"duration\": 2,\n    \"description\": \"consectetur laboris\",\n    \"user_id\": 1,\n    \"time_notification\": \"1992-11-25T10:29:13.722906+03:00\"\n},"
+				},
+				"url": {
+					"raw": "localhost:8080/event/e4d3f1a3-9faa-4bb2-931a-b2d3caed9678",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"event",
+						"e4d3f1a3-9faa-4bb2-931a-b2d3caed9678"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEvents",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/event",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"event"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEvent",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/event/5a51f80c-a76c-4572-8752-955e640edeef",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"event",
+						"5a51f80c-a76c-4572-8752-955e640edeef"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEventsForDay",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/event?type=day&start_date=2023-11-10",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"event"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "day"
+						},
+						{
+							"key": "start_date",
+							"value": "2023-11-10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEventsForWeek",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/event?type=week&start_date=2023-11-10",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"event"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "week"
+						},
+						{
+							"key": "start_date",
+							"value": "2023-11-10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEventsForMonth",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/event?type=month&start_date=2023-11-10",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"event"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "month"
+						},
+						{
+							"key": "start_date",
+							"value": "2023-11-10"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -19,6 +19,14 @@ build-img:
 run-img: build-img
 	docker run $(DOCKER_IMG)
 
+generate:
+	rm -rf internal/server/pb/* && \
+	protoc \
+        --proto_path=api/ \
+        --go_out=internal/server/pb \
+        --go-grpc_out=internal/server/pb \
+        api/*.proto
+
 version: build
 	$(BIN) version
 
@@ -31,4 +39,4 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run ./...
 
-.PHONY: build run build-img run-img version test lint
+.PHONY: build run build-img run-img generate version test lint

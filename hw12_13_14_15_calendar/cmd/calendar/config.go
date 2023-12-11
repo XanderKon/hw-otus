@@ -15,6 +15,7 @@ type Config struct {
 	Storage    StorageConf    `mapstructure:"storage"`
 	DB         DBConf         `mapstructure:"db"`
 	HTTPServer HTTPServerConf `mapstructure:"http"`
+	GRPCServer GRPCServerConf `mapstructure:"grpc"`
 }
 
 type LoggerConf struct {
@@ -35,6 +36,11 @@ type DBConf struct {
 }
 
 type HTTPServerConf struct {
+	Host string `mapstructure:"host"`
+	Port int    `mapstructure:"port"`
+}
+
+type GRPCServerConf struct {
 	Host string `mapstructure:"host"`
 	Port int    `mapstructure:"port"`
 }
