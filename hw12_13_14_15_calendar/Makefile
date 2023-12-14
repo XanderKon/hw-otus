@@ -1,4 +1,5 @@
 BIN := "./bin/calendar"
+BIN_CS := "./bin/calendar_scheduler"
 DOCKER_IMG="calendar:develop"
 
 GIT_HASH := $(shell git log --format="%h" -n 1)
@@ -9,6 +10,12 @@ build:
 
 run: build
 	$(BIN) -config ./configs/calendar_config.toml
+
+build-scheduler:
+	go build -v -o $(BIN_CS) -ldflags "$(LDFLAGS)" ./cmd/scheduler
+
+run-scheduler: build-scheduler
+	$(BIN_CS) -config ./configs/scheduler_config.toml
 
 build-img:
 	docker build \
@@ -39,4 +46,4 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run ./...
 
-.PHONY: build run build-img run-img generate version test lint
+.PHONY: build run build-scheduler run-scheduler build-img run-img generate version test lint

@@ -1,6 +1,6 @@
 [logger]
 level = "INFO"
-path = "./logs/calendar.log"
+path = "./logs/scheduler.log"
 
 [storage]
 driver = "postgres" #[memory|postgres]
@@ -12,10 +12,16 @@ name = "otus-db"
 username = "postgres"
 password = "postgres"
 
-[http]
-host = "localhost"
-port = 8080
+[rmq]
+uri = "amqp://guest:guest@localhost:5672/"
+consumerTag = "test"
+maxElapsedTime = "1m"
+initialInterval = "1s"
+multiplier = 2
+maxInterval = "15s"
 
-[grpc]
-host = "localhost"
-port = 8081
+[rmq.exchange]
+    name = "events"
+    type = "fanout"
+    queueName = "notifications"
+    bindingKey = ""
