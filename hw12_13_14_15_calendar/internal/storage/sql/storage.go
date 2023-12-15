@@ -252,3 +252,39 @@ func (s *Storage) GetEventsForWeek(ctx context.Context, startOfWeek time.Time) (
 func (s *Storage) GetEventsForMonth(ctx context.Context, startOfMonth time.Time) ([]*storage.Event, error) {
 	return s.getEventsForRange(ctx, startOfMonth, startOfMonth.AddDate(0, 1, 0))
 }
+
+func (s *Storage) GetEventsForNotifications(ctx context.Context) ([]*storage.Event, error) {
+	var events []*storage.Event
+
+	const query = `
+		SELECT id, title, date_time, duration, description, user_id, notification_time
+		FROM event
+		WHERE EXTRACT(EPOCH FROM (notification_time - NOW())) < 0
+	`
+
+	rows, err := s.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate on the results of the query and create event objects
+	for rows.Next() {
+		event := &storage.Event{}
+		err := rows.Scan(
+			&event.ID,
+			&event.Title,
+			&event.DateTime,
+			&event.Duration,
+			&event.Description,
+			&event.UserID,
+			&event.TimeNotification,
+		)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+
+	return events, nil
+}

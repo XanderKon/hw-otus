@@ -139,3 +139,17 @@ func (s *Storage) GetEventsForMonth(_ context.Context, startOfMonth time.Time) (
 
 	return s.getEventsForRange(startOfMonth, endRange.AddDate(0, 1, 0))
 }
+
+func (s *Storage) GetEventsForNotifications(_ context.Context) ([]*storage.Event, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var events []*storage.Event
+	for _, event := range s.events {
+		if time.Until(event.TimeNotification) <= 0 {
+			events = append(events, event)
+		}
+	}
+
+	return events, nil
+}
