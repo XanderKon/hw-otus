@@ -77,8 +77,8 @@ func (s *Storage) CreateEvent(ctx context.Context, event *storage.Event) error {
 func (s *Storage) UpdateEvent(ctx context.Context, eventID uuid.UUID, event *storage.Event) error {
 	const query = `
 		UPDATE event
-		SET title = $1, date_time = $2, duration = $3, description = $4, user_id = $5, notification_time = $6
-		WHERE id = $7
+		SET title = $1, date_time = $2, duration = $3, description = $4, user_id = $5, notification_time = $6, notify_at = $7
+		WHERE id = $8
 	`
 
 	_, err := s.DB.ExecContext(
@@ -90,6 +90,7 @@ func (s *Storage) UpdateEvent(ctx context.Context, eventID uuid.UUID, event *sto
 		event.Description,
 		event.UserID,
 		event.TimeNotification,
+		event.NotifyAt,
 		eventID,
 	)
 	if err != nil {
@@ -257,9 +258,10 @@ func (s *Storage) GetEventsForNotifications(ctx context.Context) ([]*storage.Eve
 	var events []*storage.Event
 
 	const query = `
-		SELECT id, title, date_time, duration, description, user_id, notification_time
+		SELECT id, title, date_time, user_id
 		FROM event
 		WHERE EXTRACT(EPOCH FROM (notification_time - NOW())) < 0
+		AND notify_at is null
 	`
 
 	rows, err := s.DB.QueryContext(ctx, query)
@@ -275,10 +277,7 @@ func (s *Storage) GetEventsForNotifications(ctx context.Context) ([]*storage.Eve
 			&event.ID,
 			&event.Title,
 			&event.DateTime,
-			&event.Duration,
-			&event.Description,
 			&event.UserID,
-			&event.TimeNotification,
 		)
 		if err != nil {
 			return nil, err

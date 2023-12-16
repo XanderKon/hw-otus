@@ -54,12 +54,23 @@ func TestCreateAndGetAndUpdateEvent(t *testing.T) {
 	// get events for notification
 	st = New()
 	eventUUID := uuid.New()
+
 	_ = st.CreateEvent(context.Background(), &storage.Event{
 		ID:               eventUUID,
 		Title:            "Event title",
 		DateTime:         time.Now(),
 		TimeNotification: time.Now().Add(time.Millisecond * 5),
 	})
+
+	// event that already has been notify
+	_ = st.CreateEvent(context.Background(), &storage.Event{
+		ID:               uuid.New(),
+		Title:            "Event title",
+		DateTime:         time.Now(),
+		TimeNotification: time.Now().Add(time.Millisecond * 4),
+		NotifyAt:         time.Now(),
+	})
+
 	_ = st.CreateEvent(context.Background(), &storage.Event{
 		ID:               uuid.New(),
 		Title:            "Event title",
@@ -74,7 +85,6 @@ func TestCreateAndGetAndUpdateEvent(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, events, 1)
 	assert.Equal(t, event, events[0])
-
 }
 
 func TestUpdateWithBusyTimeEvent(t *testing.T) {

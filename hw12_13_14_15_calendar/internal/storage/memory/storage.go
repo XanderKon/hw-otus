@@ -146,7 +146,7 @@ func (s *Storage) GetEventsForNotifications(_ context.Context) ([]*storage.Event
 
 	var events []*storage.Event
 	for _, event := range s.events {
-		if time.Until(event.TimeNotification) <= 0 {
+		if time.Until(event.TimeNotification) <= 0 && event.NotifyAt.IsZero() {
 			events = append(events, event)
 		}
 	}
