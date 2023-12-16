@@ -153,3 +153,21 @@ func (s *Storage) GetEventsForNotifications(_ context.Context) ([]*storage.Event
 
 	return events, nil
 }
+
+func (s *Storage) DeleteOldEvents(ctx context.Context, duration time.Duration) (int, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	counter := 0
+	for _, event := range s.events {
+		if time.Now().After(event.DateTime.Add(duration)) {
+			err := s.DeleteEvent(ctx, event.ID)
+			if err != nil {
+				return counter, err
+			}
+			counter++
+		}
+	}
+
+	return counter, nil
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
@@ -286,4 +287,20 @@ func (s *Storage) GetEventsForNotifications(ctx context.Context) ([]*storage.Eve
 	}
 
 	return events, nil
+}
+
+func (s *Storage) DeleteOldEvents(ctx context.Context, duration time.Duration) (int, error) {
+	query := fmt.Sprintf("DELETE FROM event WHERE date_time < NOW() - INTERVAL '%d hours'", int(duration.Hours()))
+
+	res, err := s.DB.ExecContext(ctx, query)
+	if err != nil {
+		return 0, err
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return int(affected), err
+	}
+
+	return int(affected), nil
 }
