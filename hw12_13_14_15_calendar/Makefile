@@ -1,14 +1,15 @@
 BIN := "./bin/calendar"
 BIN_CS := "./bin/calendar_scheduler"
+BIN_SE := "./bin/calendar_sender"
 DOCKER_IMG="calendar:develop"
 
 GIT_HASH := $(shell git log --format="%h" -n 1)
 LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
 
-build:
+build-calendar:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
 
-run: build
+run-calendar: build
 	$(BIN) -config ./configs/calendar_config.toml
 
 build-scheduler:
@@ -16,6 +17,14 @@ build-scheduler:
 
 run-scheduler: build-scheduler
 	$(BIN_CS) -config ./configs/scheduler_config.toml
+
+build-sender:
+	go build -v -o $(BIN_SE) -ldflags "$(LDFLAGS)" ./cmd/sender
+
+run-sender: build-sender
+	$(BIN_SE) -config ./configs/sender_config.toml
+
+build: build-calendar build-scheduler build-sender
 
 build-img:
 	docker build \
@@ -37,6 +46,12 @@ generate:
 version: build
 	$(BIN) version
 
+scheduler-version: build
+	$(BIN_CS) version
+
+sender-version: build
+	$(BIN) version
+
 test:
 	go test -race ./internal/... ./pkg/...
 
@@ -46,4 +61,4 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run ./...
 
-.PHONY: build run build-scheduler run-scheduler build-img run-img generate version test lint
+.PHONY: build build-calendar run-calendar build-scheduler run-scheduler build-sender run-sender build-img run-img generate version scheduler-version sender-version test lint

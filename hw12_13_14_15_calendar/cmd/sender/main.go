@@ -4,25 +4,21 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
 
-	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/app/scheduler"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/app/sender"
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/logger"
-	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
-	memorystorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/memory"
-	sqlstorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/sql"
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/pkg/rmq"
 )
 
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/scheduler_config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "/etc/sender_config.toml", "Path to configuration file")
 }
 
 func main() {
@@ -42,27 +38,6 @@ func main() {
 
 	logg := logger.New(config.Logger.Level, os.Stdout)
 
-	var eventStorage storage.EventStorage
-	if config.Storage.Driver == "postgres" {
-		connectionString := fmt.Sprintf(
-			"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-			config.DB.DBHost, config.DB.DBPort, config.DB.DBUsername, config.DB.DBPassword, config.DB.DBName,
-		)
-
-		eventStorage = sqlstorage.New(connectionString)
-		err := eventStorage.Connect(ctx)
-		if err != nil {
-			logg.Error("cannot connect to DB server: " + err.Error())
-			cancel()
-			os.Exit(1) //nolint:gocritic
-		}
-		defer eventStorage.Close()
-	} else {
-		eventStorage = memorystorage.New()
-	}
-
-	logg.Info(fmt.Sprintf("successfully init %s storage", config.Storage.Driver))
-
 	rmqInstance := rmq.NewRmq(
 		config.Rmq.ConsumerTag,
 		config.Rmq.URI,
@@ -76,8 +51,7 @@ func main() {
 	err := rmqInstance.Connect()
 	if err != nil {
 		logg.Error("cannot connect to AMQP server: " + err.Error())
-		cancel()
-		os.Exit(1)
+		return
 	}
 
 	var wg sync.WaitGroup
@@ -97,17 +71,15 @@ func main() {
 		wg.Done()
 	}()
 
-	scheduler := scheduler.New(
-		logg,
-		eventStorage,
-		rmqInstance,
-		config.Scheduler.RunFrequencyInterval,
-		config.Scheduler.TimeForRemoveOldEvents,
-	)
+	sender := sender.New(logg, rmqInstance, config.Sender.Threads)
 
 	wg.Add(1)
 	go func() {
-		scheduler.NotificationSender(ctx)
+		err := sender.Consume(ctx)
+		if err != nil {
+			wg.Done()
+			logg.Error("cannot init conumer for AMQP server: %s", err.Error())
+		}
 	}()
 	wg.Wait()
 }

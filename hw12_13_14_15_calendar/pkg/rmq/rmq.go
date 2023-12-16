@@ -89,7 +89,10 @@ func (r *Rmq) Handle(ctx context.Context, fn Worker, threads int) error {
 			go fn(ctx, msgs)
 		}
 
-		if <-r.done != nil {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-r.done:
 			err = r.reConnect(ctx)
 			if err != nil {
 				return errors.Join(ErrReconnection, err)

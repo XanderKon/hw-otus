@@ -1,21 +1,20 @@
 [logger]
-level = "INFO"
-path = "./logs/calendar.log"
+level = "DEBUG"
+path = "./logs/sender.log"
 
-[storage]
-driver = "postgres" #[memory|postgres]
+[sender]
+threads = 2 # How many workers for reading from Queue
 
-[db]
-host = "localhost"
-port = 5432
-name = "otus-db"
-username = "postgres"
-password = "postgres"
+[rmq]
+uri = "amqp://guest:guest@localhost:5672/"
+consumerTag = "test"
+maxElapsedTime = "1m"
+initialInterval = "1s"
+multiplier = 2
+maxInterval = "15s"
 
-[http]
-host = "localhost"
-port = 8080
-
-[grpc]
-host = "localhost"
-port = 8081
+[rmq.exchange]
+    name = "events"
+    type = "fanout"
+    queueName = "notifications"
+    bindingKey = ""
