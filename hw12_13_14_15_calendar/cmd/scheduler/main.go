@@ -2,19 +2,21 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/app/scheduler"
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/logger"
-	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/rmq"
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/memory"
 	sqlstorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/sql"
-	"github.com/streadway/amqp"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/pkg/rmq"
 )
 
 var configFile string
@@ -33,7 +35,7 @@ func main() {
 
 	// init context
 	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGTSTP)
 	defer cancel()
 
 	config := NewConfig()
@@ -61,15 +63,7 @@ func main() {
 
 	logg.Info(fmt.Sprintf("successfully init %s storage", config.Storage.Driver))
 
-	// conn, err := amqp.Dial(config.rmq.Uri)
-
-	// if err != nil {
-	// 	logg.Error("cannot connect to RMQ server: " + err.Error())
-	// 	cancel()
-	// 	os.Exit(1) //nolint:gocritic
-	// }
-
-	c := rmq.NewConsumer(
+	rmqInstance := rmq.NewRmq(
 		config.Rmq.ConsumerTag,
 		config.Rmq.URI,
 		config.Rmq.Exchange.Name,
@@ -79,25 +73,42 @@ func main() {
 		config.Rmq.MaxInterval,
 	)
 
+	err := rmqInstance.Connect()
+	if err != nil {
+		logg.Error("cannot connect to AMQP server: " + err.Error())
+		cancel()
+		os.Exit(1)
+	}
+
+	var wg sync.WaitGroup
+
 	go func() {
 		<-ctx.Done()
 
 		_, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
 
-		if err := c.Shutdown(); err != nil {
+		if err := rmqInstance.Shutdown(); err != nil && !errors.Is(err, rmq.ErrChannelClosed) {
 			logg.Error("failed to shutdown RMQ server: " + err.Error())
 		}
 
 		logg.Info("RMQ server successfully terminated!")
+
+		wg.Done()
 	}()
 
-	err := c.Handle(ctx, Worker, 1)
-	if err != nil {
-		fmt.Println(err)
-	}
+	scheduler := scheduler.New(logg, eventStorage, rmqInstance, config.Scheduler.RunFrequencyInterval, config.Scheduler.TimeForRemoveOldEvents)
+
+	wg.Add(1)
+	go func() {
+		scheduler.NotificationSender(ctx)
+	}()
+	wg.Wait()
 }
 
-func Worker(ctx context.Context, ch <-chan amqp.Delivery) {
-	fmt.Println(<-ch)
-}
+// func Worker(ctx context.Context, ch <-chan amqp.Delivery) {
+// 	for msg := range ch {
+// 		fmt.Printf("Received a message: %s\n", string(msg.Body))
+// 		msg.Ack(false)
+// 	}
+// }

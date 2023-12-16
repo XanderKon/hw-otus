@@ -12,10 +12,11 @@ import (
 // Организация конфига в main принуждает нас сужать API компонентов, использовать
 // при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
 type Config struct {
-	Logger  LoggerConf  `mapstructure:"logger"`
-	Storage StorageConf `mapstructure:"storage"`
-	DB      DBConf      `mapstructure:"db"`
-	Rmq     RMQConf     `mapstructure:"rmq"`
+	Logger    LoggerConf    `mapstructure:"logger"`
+	Storage   StorageConf   `mapstructure:"storage"`
+	DB        DBConf        `mapstructure:"db"`
+	Scheduler SchedulerConf `mapstructure:"scheduler"`
+	Rmq       RMQConf       `mapstructure:"rmq"`
 }
 
 type LoggerConf struct {
@@ -33,6 +34,11 @@ type DBConf struct {
 	DBName     string `mapstructure:"name"`
 	DBUsername string `mapstructure:"username"`
 	DBPassword string `mapstructure:"password"`
+}
+
+type SchedulerConf struct {
+	RunFrequencyInterval   time.Duration `mapstructure:"runFrequencyInterval"`
+	TimeForRemoveOldEvents time.Duration `mapstructure:"timeForRemoveOldEvents"`
 }
 
 type ExchangeConf struct {

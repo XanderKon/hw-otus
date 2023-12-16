@@ -1,5 +1,5 @@
 [logger]
-level = "INFO"
+level = "DEBUG"
 path = "./logs/scheduler.log"
 
 [storage]
@@ -11,6 +11,10 @@ port = 5432
 name = "otus-db"
 username = "postgres"
 password = "postgres"
+
+[scheduler]
+runFrequencyInterval = "5s" # Run scheduler service every 5 seconds
+timeForRemoveOldEvents = "8760h" # Remove old events that older than 1 year
 
 [rmq]
 uri = "amqp://guest:guest@localhost:5672/"
