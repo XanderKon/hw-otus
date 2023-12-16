@@ -21,6 +21,7 @@ type Event struct {
 	Description      string    `json:"description"`
 	UserID           int64     `json:"user_id"`           //nolint:tagliatelle
 	TimeNotification time.Time `json:"time_notification"` //nolint:tagliatelle
+	NotifyAt         time.Time `json:"notify_at"`         //nolint:tagliatelle
 }
 
 type Notification struct {

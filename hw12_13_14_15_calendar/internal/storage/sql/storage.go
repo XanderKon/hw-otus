@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
@@ -77,8 +78,8 @@ func (s *Storage) CreateEvent(ctx context.Context, event *storage.Event) error {
 func (s *Storage) UpdateEvent(ctx context.Context, eventID uuid.UUID, event *storage.Event) error {
 	const query = `
 		UPDATE event
-		SET title = $1, date_time = $2, duration = $3, description = $4, user_id = $5, notification_time = $6
-		WHERE id = $7
+		SET title = $1, date_time = $2, duration = $3, description = $4, user_id = $5, notification_time = $6, notify_at = $7
+		WHERE id = $8
 	`
 
 	_, err := s.DB.ExecContext(
@@ -90,6 +91,7 @@ func (s *Storage) UpdateEvent(ctx context.Context, eventID uuid.UUID, event *sto
 		event.Description,
 		event.UserID,
 		event.TimeNotification,
+		event.NotifyAt,
 		eventID,
 	)
 	if err != nil {
@@ -251,4 +253,54 @@ func (s *Storage) GetEventsForWeek(ctx context.Context, startOfWeek time.Time) (
 
 func (s *Storage) GetEventsForMonth(ctx context.Context, startOfMonth time.Time) ([]*storage.Event, error) {
 	return s.getEventsForRange(ctx, startOfMonth, startOfMonth.AddDate(0, 1, 0))
+}
+
+func (s *Storage) GetEventsForNotifications(ctx context.Context) ([]*storage.Event, error) {
+	var events []*storage.Event
+
+	const query = `
+		SELECT id, title, date_time, user_id
+		FROM event
+		WHERE EXTRACT(EPOCH FROM (notification_time - NOW())) < 0
+		AND notify_at is null
+	`
+
+	rows, err := s.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate on the results of the query and create event objects
+	for rows.Next() {
+		event := &storage.Event{}
+		err := rows.Scan(
+			&event.ID,
+			&event.Title,
+			&event.DateTime,
+			&event.UserID,
+		)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+func (s *Storage) DeleteOldEvents(ctx context.Context, duration time.Duration) (int, error) {
+	query := fmt.Sprintf("DELETE FROM event WHERE date_time < NOW() - INTERVAL '%d hours'", int(duration.Hours()))
+
+	res, err := s.DB.ExecContext(ctx, query)
+	if err != nil {
+		return 0, err
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return int(affected), err
+	}
+
+	return int(affected), nil
 }

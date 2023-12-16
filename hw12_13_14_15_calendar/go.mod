@@ -3,12 +3,14 @@ module github.com/XanderKon/hw-otus/hw12_13_14_15_calendar
 go 1.19
 
 require (
+	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.4.0
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.2.0
 	github.com/pressly/goose v2.7.0+incompatible
 	github.com/spf13/viper v1.17.0
+	github.com/streadway/amqp v1.1.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	google.golang.org/grpc v1.59.0
