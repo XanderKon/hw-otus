@@ -1,0 +1,84 @@
+version: "3"
+
+services:
+  app-calendar:
+    container_name: otus-calendar-app
+    build:
+      dockerfile: ./build/calendar/Dockerfile
+      context: '../'
+    environment:
+      DB_HOST: db
+      STORAGE_MIGRATIONS_PATH: /etc/calendar/migrations
+      HTTP_HOST: "0.0.0.0"
+      GRPC_HOST: "0.0.0.0"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    expose:
+      - 8080
+      - 8081
+    restart: on-failure
+  app-scheduler:
+    container_name: otus-calendar-scheduler
+    build:
+      dockerfile: ./build/scheduler/Dockerfile
+      context: '../'
+    environment:
+      DB_HOST: db
+      STORAGE_MIGRATIONS_PATH: /etc/calendar/migrations
+      RMQ_URI: "amqp://guest:guest@rmq:5672/"
+    depends_on:
+      app-calendar:
+        condition: service_started
+      rmq:
+        condition: service_healthy
+    restart: on-failure
+  app-sender:
+    container_name: otus-calendar-sender
+    build:
+      dockerfile: ./build/sender/Dockerfile
+      context: '../'
+    environment:
+      RMQ_URI: "amqp://guest:guest@rmq:5672/"
+    depends_on:
+      app-calendar:
+        condition: service_started
+      rmq:
+        condition: service_healthy
+    restart: on-failure
+  db:
+    container_name: otus-calendar-db
+    image: postgres:14.9
+    environment:
+      POSTGRES_DB: otus-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: Europe/Moscow
+      PGTZ: Europe/Moscow
+    ports:
+      - "5434:5432"    
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 4s
+      timeout: 3s
+      retries: 7
+  rmq:
+    container_name: otus-calendar-rmq
+    image: rabbitmq:latest
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    expose:
+      - 15672
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 4s
+      timeout: 5s
+      retries: 7
