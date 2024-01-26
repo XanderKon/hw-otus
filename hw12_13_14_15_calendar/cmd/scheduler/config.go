@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -25,7 +26,8 @@ type LoggerConf struct {
 }
 
 type StorageConf struct {
-	Driver string `mapstructure:"driver"`
+	Driver         string `mapstructure:"driver"`
+	MigrationsPath string `mapstructure:"migrations_path"`
 }
 
 type DBConf struct {
@@ -61,6 +63,8 @@ type RMQConf struct {
 func NewConfig() *Config {
 	v := viper.New()
 	v.SetConfigFile(configFile)
+	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	if err := v.ReadInConfig(); err != nil {
 		fmt.Printf("couldn't load config: %s", err)

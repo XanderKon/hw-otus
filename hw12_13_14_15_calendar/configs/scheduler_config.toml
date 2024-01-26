@@ -3,7 +3,8 @@ level = "DEBUG"
 path = "./logs/scheduler.log"
 
 [storage]
-driver = "postgres" #[memory|postgres]
+driver = "postgres"              #[memory|postgres]
+migrations_path = "./migrations"
 
 [db]
 host = "localhost"
@@ -13,7 +14,7 @@ username = "postgres"
 password = "postgres"
 
 [scheduler]
-runFrequencyInterval = "5s" # Run scheduler service every 5 seconds
+runFrequencyInterval = "5s"      # Run scheduler service every 5 seconds
 timeForRemoveOldEvents = "8760h" # Remove old events that older than 1 year
 
 [rmq]
@@ -25,7 +26,7 @@ multiplier = 2
 maxInterval = "15s"
 
 [rmq.exchange]
-    name = "events"
-    type = "fanout"
-    queueName = "notifications"
-    bindingKey = ""
+name = "events"
+type = "fanout"
+queueName = "notifications"
+bindingKey = ""

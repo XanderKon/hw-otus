@@ -16,11 +16,13 @@ import (
 type Storage struct {
 	DB               *sql.DB
 	connectionString string
+	migrationsPath   string
 }
 
-func New(connectionString string) *Storage {
+func New(connectionString string, migrationsPath string) *Storage {
 	return &Storage{
 		connectionString: connectionString,
+		migrationsPath:   migrationsPath,
 	}
 }
 
@@ -45,7 +47,7 @@ func (s *Storage) migrate() error {
 		return err
 	}
 
-	return goose.Up(s.DB, "migrations")
+	return goose.Up(s.DB, s.migrationsPath)
 }
 
 func (s *Storage) Close() error {
