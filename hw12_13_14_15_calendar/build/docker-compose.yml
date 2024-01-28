@@ -49,6 +49,21 @@ services:
       rmq:
         condition: service_healthy
     restart: on-failure
+  app-integration-test:
+    container_name: otus-calendar-app-test
+    profiles: ["test"]
+    build:
+      dockerfile: ./build/calendar/Dockerfile
+      context: '../'
+    environment:
+      DB_NAME: otus-db-test
+      DB_HOST: db-test
+      STORAGE_MIGRATIONS_PATH: /etc/calendar/migrations
+      HTTP_HOST: "0.0.0.0"
+      GRPC_HOST: "0.0.0.0"
+    depends_on:
+      db-test:
+        condition: service_healthy
   db:
     container_name: otus-calendar-db
     image: postgres:14.9
@@ -61,6 +76,24 @@ services:
       PGTZ: Europe/Moscow
     ports:
       - "5434:5432"    
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 4s
+      timeout: 3s
+      retries: 7
+  db-test:
+    container_name: otus-calendar-db-test
+    image: postgres:14.9
+    profiles: ["test"]
+    environment:
+      POSTGRES_DB: otus-db-test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: Europe/Moscow
+      PGTZ: Europe/Moscow
+    ports:
+      - "5436:5432"    
     healthcheck:
       test: pg_isready -U postgres
       interval: 4s
