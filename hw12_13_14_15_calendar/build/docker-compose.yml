@@ -53,7 +53,7 @@ services:
     container_name: otus-calendar-app-test
     profiles: ["test"]
     build:
-      dockerfile: ./build/calendar/Dockerfile
+      dockerfile: ./build/test/Dockerfile
       context: '../'
     environment:
       DB_NAME: otus-db-test
@@ -64,6 +64,32 @@ services:
     depends_on:
       db-test:
         condition: service_healthy
+    networks:
+      - test
+    expose:
+      - 8080
+      - 8081
+    restart: on-failure
+  db-test:
+    container_name: otus-calendar-db-test
+    image: postgres:14.9
+    profiles: ["test"]
+    environment:
+      POSTGRES_DB: otus-db-test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: Europe/Moscow
+      PGTZ: Europe/Moscow
+    networks:
+      - test
+    ports:
+      - "5436:5432"    
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 4s
+      timeout: 3s
+      retries: 7
   db:
     container_name: otus-calendar-db
     image: postgres:14.9
@@ -76,24 +102,6 @@ services:
       PGTZ: Europe/Moscow
     ports:
       - "5434:5432"    
-    healthcheck:
-      test: pg_isready -U postgres
-      interval: 4s
-      timeout: 3s
-      retries: 7
-  db-test:
-    container_name: otus-calendar-db-test
-    image: postgres:14.9
-    profiles: ["test"]
-    environment:
-      POSTGRES_DB: otus-db-test
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      PGDATA: /var/lib/postgresql/data/pgdata
-      TZ: Europe/Moscow
-      PGTZ: Europe/Moscow
-    ports:
-      - "5436:5432"    
     healthcheck:
       test: pg_isready -U postgres
       interval: 4s
@@ -115,3 +123,6 @@ services:
       interval: 4s
       timeout: 5s
       retries: 7
+networks:
+  test:
+    driver: bridge

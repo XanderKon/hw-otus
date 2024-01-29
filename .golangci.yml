@@ -10,31 +10,36 @@ linters-settings:
     statements: 80
   depguard:
     rules:
-        main:
-          files:
-            - $all
-            - !$test
-          allow:
-            - $gostd
-            - github.com/google/uuid
-            - github.com/lib/pq
-            - github.com/pressly/goose
-            - github.com/spf13/viper
-            - github.com/XanderKon/hw-otus
-            - github.com/gorilla/mux
-            - github.com/golang/protobuf/ptypes/timestamp
-            - github.com/cenkalti/backoff
-            - github.com/streadway/amqp
-            - github.com/stretchr/testify/assert
-        tests:
-          listMode: Lax
-          files:
-            - $test
-          allow:
-            - $gostd
-            - github.com/google/uuid
-            - github.com/XanderKon/hw-otus/
-            - github.com/stretchr/testify/assert
+      main:
+        files:
+          - $all
+          - !$test
+        allow:
+          - $gostd
+          - github.com/google/uuid
+          - github.com/lib/pq
+          - github.com/pressly/goose
+          - github.com/spf13/viper
+          - github.com/XanderKon/hw-otus
+          - github.com/gorilla/mux
+          - github.com/golang/protobuf/ptypes/timestamp
+          - github.com/cenkalti/backoff
+          - github.com/streadway/amqp
+          - github.com/stretchr/testify/assert
+          - github.com/stretchr/testify/suite
+      tests:
+        listMode: Lax
+        files:
+          - $test
+        allow:
+          - $gostd
+          - github.com/google/uuid
+          - github.com/XanderKon/hw-otus/
+          - github.com/stretchr/testify/assert
+          - github.com/stretchr/testify/suite
+          - github.com/pressly/goose
+          - github.com/golang/protobuf/ptypes/timestamp
+          - github.com/lib/pq
 issues:
   exclude-rules:
     - path: _test\.go

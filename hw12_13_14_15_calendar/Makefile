@@ -42,9 +42,9 @@ down:
 	docker compose -f "./build/docker-compose.yml" down
 
 integration-tests:
-	docker compose -f "./build/docker-compose.yml" --profile test up -d
-	docker compose -f "./build/docker-compose.yml" --profile test exec -it otus-calendar-app-test go test -v ./test/integration_test.go -tags integration
-	# docker compose -f "./build/docker-compose.yml" --profile test down
+	docker compose -f "./build/docker-compose.yml" --profile test up -d --no-deps --build
+	docker compose -f "./build/docker-compose.yml" --profile test exec -it app-integration-test go test -v ./test/integration_test.go -tags integration
+	docker compose -f "./build/docker-compose.yml" --profile test down
 
 generate:
 	rm -rf internal/server/pb/* && \
