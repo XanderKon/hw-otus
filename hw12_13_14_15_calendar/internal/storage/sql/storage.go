@@ -123,10 +123,6 @@ func (s *Storage) GetEvent(ctx context.Context, eventID uuid.UUID) (*storage.Eve
 
 	row := s.DB.QueryRowContext(ctx, query, eventID)
 
-	if errors.Is(row.Err(), sql.ErrNoRows) {
-		return nil, storage.ErrEventNotFound
-	}
-
 	var event storage.Event
 	err := row.Scan(
 		&event.ID,
@@ -138,6 +134,10 @@ func (s *Storage) GetEvent(ctx context.Context, eventID uuid.UUID) (*storage.Eve
 		&event.TimeNotification,
 	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrEventNotFound
+		}
+
 		return nil, err
 	}
 
