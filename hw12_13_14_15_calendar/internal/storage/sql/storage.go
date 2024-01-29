@@ -106,9 +106,14 @@ func (s *Storage) UpdateEvent(ctx context.Context, eventID uuid.UUID, event *sto
 func (s *Storage) DeleteEvent(ctx context.Context, eventID uuid.UUID) error {
 	const query = `DELETE FROM event WHERE id = $1`
 
-	_, err := s.DB.ExecContext(ctx, query, eventID)
+	res, err := s.DB.ExecContext(ctx, query, eventID)
 	if err != nil {
 		return err
+	}
+
+	count, err := res.RowsAffected()
+	if err == nil && count == 0 {
+		return storage.ErrEventNotFound
 	}
 
 	return nil
