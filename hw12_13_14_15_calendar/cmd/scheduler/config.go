@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -11,11 +12,11 @@ import (
 // Организация конфига в main принуждает нас сужать API компонентов, использовать
 // при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
 type Config struct {
-	Logger     LoggerConf     `mapstructure:"logger"`
-	Storage    StorageConf    `mapstructure:"storage"`
-	DB         DBConf         `mapstructure:"db"`
-	HTTPServer HTTPServerConf `mapstructure:"http"`
-	GRPCServer GRPCServerConf `mapstructure:"grpc"`
+	Logger    LoggerConf    `mapstructure:"logger"`
+	Storage   StorageConf   `mapstructure:"storage"`
+	DB        DBConf        `mapstructure:"db"`
+	Scheduler SchedulerConf `mapstructure:"scheduler"`
+	Rmq       RMQConf       `mapstructure:"rmq"`
 }
 
 type LoggerConf struct {
@@ -35,14 +36,26 @@ type DBConf struct {
 	DBPassword string `mapstructure:"password"`
 }
 
-type HTTPServerConf struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
+type SchedulerConf struct {
+	RunFrequencyInterval   time.Duration `mapstructure:"runFrequencyInterval"`
+	TimeForRemoveOldEvents time.Duration `mapstructure:"timeForRemoveOldEvents"`
 }
 
-type GRPCServerConf struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
+type ExchangeConf struct {
+	Name       string `mapstructure:"name"`
+	Type       string `mapstructure:"type"`
+	QueueName  string `mapstructure:"queueName"`
+	BindingKey string `mapstructure:"bindingKey"`
+}
+
+type RMQConf struct {
+	URI             string        `mapstructure:"uri"`
+	ConsumerTag     string        `mapstructure:"consumerTag"`
+	MaxElapsedTime  string        `mapstructure:"maxElapsedTime"`
+	InitialInterval string        `mapstructure:"initialInterval"`
+	Multiplier      int           `mapstructure:"multiplier"`
+	MaxInterval     time.Duration `mapstructure:"maxInterval"`
+	Exchange        ExchangeConf
 }
 
 func NewConfig() *Config {

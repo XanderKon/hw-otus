@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -11,11 +12,9 @@ import (
 // Организация конфига в main принуждает нас сужать API компонентов, использовать
 // при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
 type Config struct {
-	Logger     LoggerConf     `mapstructure:"logger"`
-	Storage    StorageConf    `mapstructure:"storage"`
-	DB         DBConf         `mapstructure:"db"`
-	HTTPServer HTTPServerConf `mapstructure:"http"`
-	GRPCServer GRPCServerConf `mapstructure:"grpc"`
+	Logger LoggerConf `mapstructure:"logger"`
+	Sender SenderConf `mapstructure:"sender"`
+	Rmq    RMQConf    `mapstructure:"rmq"`
 }
 
 type LoggerConf struct {
@@ -23,26 +22,25 @@ type LoggerConf struct {
 	Path  string `mapstructure:"path"`
 }
 
-type StorageConf struct {
-	Driver string `mapstructure:"driver"`
+type SenderConf struct {
+	Threads int `mapstructure:"threads"`
 }
 
-type DBConf struct {
-	DBHost     string `mapstructure:"host"`
-	DBPort     int    `mapstructure:"port"`
-	DBName     string `mapstructure:"name"`
-	DBUsername string `mapstructure:"username"`
-	DBPassword string `mapstructure:"password"`
+type ExchangeConf struct {
+	Name       string `mapstructure:"name"`
+	Type       string `mapstructure:"type"`
+	QueueName  string `mapstructure:"queueName"`
+	BindingKey string `mapstructure:"bindingKey"`
 }
 
-type HTTPServerConf struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
-}
-
-type GRPCServerConf struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
+type RMQConf struct {
+	URI             string        `mapstructure:"uri"`
+	ConsumerTag     string        `mapstructure:"consumerTag"`
+	MaxElapsedTime  string        `mapstructure:"maxElapsedTime"`
+	InitialInterval string        `mapstructure:"initialInterval"`
+	Multiplier      int           `mapstructure:"multiplier"`
+	MaxInterval     time.Duration `mapstructure:"maxInterval"`
+	Exchange        ExchangeConf
 }
 
 func NewConfig() *Config {

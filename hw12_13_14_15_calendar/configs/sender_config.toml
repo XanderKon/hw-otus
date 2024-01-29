@@ -1,0 +1,20 @@
+[logger]
+level = "DEBUG"
+path = "./logs/sender.log"
+
+[sender]
+threads = 2 # How many workers for reading from Queue
+
+[rmq]
+uri = "amqp://guest:guest@localhost:5672/"
+consumerTag = "test"
+maxElapsedTime = "1m"
+initialInterval = "1s"
+multiplier = 2
+maxInterval = "15s"
+
+[rmq.exchange]
+    name = "events"
+    type = "fanout"
+    queueName = "notifications"
+    bindingKey = ""

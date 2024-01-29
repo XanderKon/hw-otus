@@ -5,26 +5,24 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
 
-	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/app"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/app/scheduler"
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/logger"
-	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/server/grpc"
-	internalhttp "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/server/http"
 	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/memory"
 	sqlstorage "github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/internal/storage/sql"
+	"github.com/XanderKon/hw-otus/hw12_13_14_15_calendar/pkg/rmq"
 )
 
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "/etc/scheduler_config.toml", "Path to configuration file")
 }
 
 func main() {
@@ -37,7 +35,7 @@ func main() {
 
 	// init context
 	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGTSTP)
 	defer cancel()
 
 	config := NewConfig()
@@ -65,10 +63,24 @@ func main() {
 
 	logg.Info(fmt.Sprintf("successfully init %s storage", config.Storage.Driver))
 
-	calendar := app.New(logg, eventStorage)
+	rmqInstance := rmq.NewRmq(
+		config.Rmq.ConsumerTag,
+		config.Rmq.URI,
+		config.Rmq.Exchange.Name,
+		config.Rmq.Exchange.Type,
+		config.Rmq.Exchange.QueueName,
+		config.Rmq.Exchange.BindingKey,
+		config.Rmq.MaxInterval,
+	)
 
-	httpServer := internalhttp.NewServer(config.HTTPServer.Host, config.HTTPServer.Port, logg, calendar)
-	grpcServer := grpc.NewServer(config.GRPCServer.Host, config.GRPCServer.Port, logg, calendar)
+	err := rmqInstance.Connect()
+	if err != nil {
+		logg.Error("cannot connect to AMQP server: " + err.Error())
+		cancel()
+		os.Exit(1)
+	}
+
+	var wg sync.WaitGroup
 
 	go func() {
 		<-ctx.Done()
@@ -76,35 +88,26 @@ func main() {
 		_, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
 
-		if err := httpServer.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+		if err := rmqInstance.Shutdown(); err != nil && !errors.Is(err, rmq.ErrChannelClosed) {
+			logg.Error("failed to shutdown RMQ server: " + err.Error())
 		}
 
-		logg.Info("http-server successfully terminated!")
+		logg.Info("RMQ server successfully terminated!")
 
-		grpcServer.Stop()
-		logg.Info("grpc-server successfully terminated!")
-
-		os.Exit(1)
+		wg.Done()
 	}()
 
-	logg.Info("calendar is running...")
+	scheduler := scheduler.New(
+		logg,
+		eventStorage,
+		rmqInstance,
+		config.Scheduler.RunFrequencyInterval,
+		config.Scheduler.TimeForRemoveOldEvents,
+	)
 
-	var wg sync.WaitGroup
-
-	wg.Add(2)
-
+	wg.Add(1)
 	go func() {
-		if err := httpServer.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logg.Error("failed to start http server: " + err.Error())
-		}
+		scheduler.NotificationSender(ctx)
 	}()
-
-	go func() {
-		if err := grpcServer.Start(ctx); err != nil {
-			logg.Error("failed to start grpc server: " + err.Error())
-		}
-	}()
-
 	wg.Wait()
 }

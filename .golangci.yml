@@ -21,6 +21,10 @@ linters-settings:
             - github.com/pressly/goose
             - github.com/spf13/viper
             - github.com/XanderKon/hw-otus
+            - github.com/gorilla/mux
+            - github.com/golang/protobuf/ptypes/timestamp
+            - github.com/cenkalti/backoff
+            - github.com/streadway/amqp
             - github.com/stretchr/testify/assert
         tests:
           listMode: Lax
