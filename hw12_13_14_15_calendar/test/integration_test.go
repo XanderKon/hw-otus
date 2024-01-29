@@ -71,9 +71,6 @@ func (cs *CalendarSuite) SetupSuite() {
 	err = goose.Up(db, mPath)
 	cs.NoError(err)
 
-	fmt.Println(DSN)
-	fmt.Println(mPath)
-
 	cs.db = db
 }
 
