@@ -50,6 +50,41 @@ func TestCreateAndGetAndUpdateEvent(t *testing.T) {
 	// get event that doesn't exist
 	_, err = st.GetEvent(context.Background(), uuid.New())
 	assert.Equal(t, storage.ErrEventNotFound, err)
+
+	// get events for notification
+	st = New()
+	eventUUID := uuid.New()
+
+	_ = st.CreateEvent(context.Background(), &storage.Event{
+		ID:               eventUUID,
+		Title:            "Event title",
+		DateTime:         time.Now(),
+		TimeNotification: time.Now().Add(time.Millisecond * 5),
+	})
+
+	// event that already has been notify
+	_ = st.CreateEvent(context.Background(), &storage.Event{
+		ID:               uuid.New(),
+		Title:            "Event title",
+		DateTime:         time.Now(),
+		TimeNotification: time.Now().Add(time.Millisecond * 4),
+		NotifyAt:         time.Now(),
+	})
+
+	_ = st.CreateEvent(context.Background(), &storage.Event{
+		ID:               uuid.New(),
+		Title:            "Event title",
+		DateTime:         time.Now(),
+		TimeNotification: time.Now().Add(time.Millisecond * 1000),
+	})
+
+	event, _ = st.GetEvent(context.Background(), eventUUID)
+
+	time.Sleep(time.Millisecond * 10)
+	events, err := st.GetEventsForNotifications(context.Background())
+	assert.NoError(t, err)
+	assert.Len(t, events, 1)
+	assert.Equal(t, event, events[0])
 }
 
 func TestUpdateWithBusyTimeEvent(t *testing.T) {
