@@ -35,6 +35,17 @@ build-img:
 run-img: build-img
 	docker run $(DOCKER_IMG)
 
+up:
+	docker compose -f "./build/docker-compose.yml" up --no-deps --build
+
+down:
+	docker compose -f "./build/docker-compose.yml" down
+
+integration-tests:
+	docker compose -f "./build/docker-compose.yml" --profile test up -d --no-deps --build
+	docker compose -f "./build/docker-compose.yml" --profile test exec -it app-integration-test go test -v ./test/integration_test.go -tags integration
+	docker compose -f "./build/docker-compose.yml" --profile test down
+
 generate:
 	rm -rf internal/server/pb/* && \
 	protoc \
@@ -61,4 +72,4 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run ./...
 
-.PHONY: build build-calendar run-calendar build-scheduler run-scheduler build-sender run-sender build-img run-img generate version scheduler-version sender-version test lint
+.PHONY: build build-calendar run-calendar build-scheduler run-scheduler build-sender run-sender build-img run-img up down integration-tests generate version scheduler-version sender-version test lint

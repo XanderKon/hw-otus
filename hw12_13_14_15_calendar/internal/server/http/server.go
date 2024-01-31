@@ -188,6 +188,13 @@ func (s *Server) deleteEventHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// try to get event by UUID
+	_, err = s.app.GetEvent(r.Context(), eventUUID)
+	if err != nil {
+		s.errorResponse(w, ErrEventNotFound, http.StatusNotFound)
+		return
+	}
+
 	if err := s.app.DeleteEvent(r.Context(), eventUUID); err != nil {
 		s.errorResponse(w, ErrEventNotFound, http.StatusNotFound)
 		return

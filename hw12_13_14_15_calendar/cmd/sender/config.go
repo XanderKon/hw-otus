@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -45,6 +46,9 @@ type RMQConf struct {
 
 func NewConfig() *Config {
 	v := viper.New()
+	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	v.SetConfigFile(configFile)
 
 	if err := v.ReadInConfig(); err != nil {

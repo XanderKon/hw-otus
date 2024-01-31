@@ -3,7 +3,8 @@ level = "INFO"
 path = "./logs/calendar.log"
 
 [storage]
-driver = "postgres" #[memory|postgres]
+driver = "postgres"              #[memory|postgres]
+migrations_path = "./migrations"
 
 [db]
 host = "localhost"

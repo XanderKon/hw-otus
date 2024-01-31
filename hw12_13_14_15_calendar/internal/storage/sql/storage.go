@@ -16,11 +16,13 @@ import (
 type Storage struct {
 	DB               *sql.DB
 	connectionString string
+	migrationsPath   string
 }
 
-func New(connectionString string) *Storage {
+func New(connectionString string, migrationsPath string) *Storage {
 	return &Storage{
 		connectionString: connectionString,
+		migrationsPath:   migrationsPath,
 	}
 }
 
@@ -45,7 +47,7 @@ func (s *Storage) migrate() error {
 		return err
 	}
 
-	return goose.Up(s.DB, "migrations")
+	return goose.Up(s.DB, s.migrationsPath)
 }
 
 func (s *Storage) Close() error {
@@ -104,9 +106,14 @@ func (s *Storage) UpdateEvent(ctx context.Context, eventID uuid.UUID, event *sto
 func (s *Storage) DeleteEvent(ctx context.Context, eventID uuid.UUID) error {
 	const query = `DELETE FROM event WHERE id = $1`
 
-	_, err := s.DB.ExecContext(ctx, query, eventID)
+	res, err := s.DB.ExecContext(ctx, query, eventID)
 	if err != nil {
 		return err
+	}
+
+	count, err := res.RowsAffected()
+	if err == nil && count == 0 {
+		return storage.ErrEventNotFound
 	}
 
 	return nil
@@ -121,10 +128,6 @@ func (s *Storage) GetEvent(ctx context.Context, eventID uuid.UUID) (*storage.Eve
 
 	row := s.DB.QueryRowContext(ctx, query, eventID)
 
-	if errors.Is(row.Err(), sql.ErrNoRows) {
-		return nil, storage.ErrEventNotFound
-	}
-
 	var event storage.Event
 	err := row.Scan(
 		&event.ID,
@@ -136,6 +139,10 @@ func (s *Storage) GetEvent(ctx context.Context, eventID uuid.UUID) (*storage.Eve
 		&event.TimeNotification,
 	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrEventNotFound
+		}
+
 		return nil, err
 	}
 

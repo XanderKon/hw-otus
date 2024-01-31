@@ -51,7 +51,7 @@ func main() {
 			config.DB.DBHost, config.DB.DBPort, config.DB.DBUsername, config.DB.DBPassword, config.DB.DBName,
 		)
 
-		eventStorage = sqlstorage.New(connectionString)
+		eventStorage = sqlstorage.New(connectionString, config.Storage.MigrationsPath)
 		err := eventStorage.Connect(ctx)
 		if err != nil {
 			logg.Error("cannot connect to DB server: " + err.Error())
