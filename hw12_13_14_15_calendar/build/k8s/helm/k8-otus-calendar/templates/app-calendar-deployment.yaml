@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "k8-otus-calendar-app"
+  labels:
+    {{- include "k8-otus-calendar.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "k8-otus-calendar.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "k8-otus-calendar.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.app.calendarApp.name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.app.calendarApp.image.repository }}:{{ .Values.app.calendarApp.image.tag }}"
+          imagePullPolicy: {{ .Values.app.calendarApp.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.httpPort }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.service.grpcPort }}
+              protocol: TCP
+          env:
+            {{- if .Values.postgresql.enabled }}
+            - name: DB_HOST
+              value: "{{ .Release.Name}}-postgresql-hl"
+            - name: DB_NAME
+              value: {{ .Values.postgresql.global.postgresql.postgresqlDatabase | quote }}
+            - name: DB_PASSWORD
+              value: {{ .Values.postgresql.global.postgresql.postgresqlPassword | quote }}
+            - name: DB_USERNAME
+              value: {{ .Values.postgresql.global.postgresql.postgresqlUsername | quote }}
+            - name: DB_PORT
+              value: {{ .Values.postgresql.global.postgresql.servicePort | quote }}
+            {{- end }}
+            - name: STORAGE_MIGRATIONS_PATH
+              value: {{ .Values.app.migrationPath }}
+            - name: HTTP_HOST
+              value: 0.0.0.0
+            - name: GRPC_HOST
+              value: 0.0.0.0
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}                
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
