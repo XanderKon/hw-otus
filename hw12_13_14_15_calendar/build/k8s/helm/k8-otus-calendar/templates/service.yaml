@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "k8-otus-calendar.fullname" . }}
+  labels:
+    {{- include "k8-otus-calendar.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 80
+      targetPort: {{ .Values.service.httpPort }}
+      protocol: TCP
+      name: http
+    - port: 8081
+      targetPort: {{ .Values.service.grpcPort }}
+      protocol: TCP
+      name: grpc
+  selector:
+    {{- include "k8-otus-calendar.selectorLabels" . | nindent 4 }}
